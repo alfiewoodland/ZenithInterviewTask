@@ -1,16 +1,26 @@
-import { Button, Collapse, Loader, Paper, Table, Text } from "@mantine/core";
+import { Button, Collapse, Group, Loader, NativeSelect, Paper, Table, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useFines } from "../hooks/useFines";
+import { FineTypeLabels } from "../enum/fineType";
+import { IconAlertTriangleFilled, IconChevronDown, IconChevronUp, IconFilterFilled } from "@tabler/icons-react";
+import { useState } from "react";
 
 export default function Index() {
     const [opened, { toggle }] = useDisclosure(false);
     const { fines, loading, error } = useFines();
 
+    const [selectedFineType, setSelectedFineType] = useState('');
+
+    const fineTypes = [
+        { value: '', label: 'Any' },
+        ...Object.entries(FineTypeLabels).map(([key, label]) => ({ value: key, label }))
+    ];
+
     const rows = fines.map((fine) => (
         <Table.Tr key={fine.fineRef}>
             <Table.Td>{fine.fineRef}</Table.Td>
-            <Table.Td>{fine.fineDate}</Table.Td>
-            <Table.Td>{fine.fineType}</Table.Td>
+            <Table.Td>{fine.fineDate.toLocaleDateString()}</Table.Td>
+            <Table.Td>{FineTypeLabels[fine.fineType]}</Table.Td>
             <Table.Td>{fine.customerName}</Table.Td>
             <Table.Td>{fine.vehicleReg}</Table.Td>
             <Table.Td>{fine.driverName}</Table.Td>
@@ -21,10 +31,20 @@ export default function Index() {
         <main>
             <h2>Index</h2>
 
-            <Button onClick={toggle} mb="md">Filters</Button>
+            <Button onClick={toggle} mb="md" variant="subtle">
+                <Group gap="xs">
+                    <IconFilterFilled size={16} />
+                    <Text>Filters</Text>
+                    {opened ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+                </Group>
+            </Button>
             <Collapse in={opened}>
                 <Paper shadow="xs" px="xl" py="md" mb="md">
-                    Filters will go here.
+                    <NativeSelect
+                        data={fineTypes}
+                        value={selectedFineType}
+                        onChange={(event) => setSelectedFineType(event.currentTarget.value)}
+                        label="Fine Type" />
                 </Paper>
             </Collapse>
 
@@ -32,7 +52,10 @@ export default function Index() {
                 {loading ? (
                     <Loader />
                 ) : error ? (
-                    <Text c="red">{error}</Text>
+                    <Group gap="xs" c="red">
+                        <IconAlertTriangleFilled size={16} />
+                        <Text >{error}</Text>
+                    </Group>
                 ) : (
                     <Table>
                         <Table.Thead>

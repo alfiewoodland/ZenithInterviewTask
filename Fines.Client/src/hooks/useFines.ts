@@ -1,32 +1,16 @@
 import { useEffect, useState } from "react";
+import { FineType } from "../enum/fineType";
+
+const API_URL = "https://localhost:5001";
 
 interface Fine {
     fineRef: string;
-    fineDate: string;
-    fineType: string;
+    fineDate: Date;
+    fineType: FineType;
     customerName: string;
     vehicleReg: string;
     driverName: string;
 }
-
-const DUMMY_FINES: Fine[] = [
-    {
-        fineRef: "F12345",
-        fineDate: "2024-01-15",
-        fineType: "Speeding",
-        customerName: "John Doe",
-        vehicleReg: "ABC123",
-        driverName: "Jane Smith"
-    },
-    {
-        fineRef: "F67890",
-        fineDate: "2024-02-20",
-        fineType: "Illegal Parking",
-        customerName: "Alice Johnson",
-        vehicleReg: "XYZ789",
-        driverName: "Bob Brown"
-    }
-];
 
 export function useFines() {
     const [fines, setFines] = useState<Fine[]>([]);
@@ -39,9 +23,18 @@ export function useFines() {
             setError(null);
 
             try {
-                await new Promise(resolve => setTimeout(resolve, 800));
-                setFines(DUMMY_FINES);
+                const response = await fetch(`${API_URL}/fines`);
+                if (!response.ok) {
+                    throw new Error(response.statusText);
+                }
+                const raw = await response.json();
+                const fines = raw.map((fine: any) => ({
+                    ...fine,
+                    fineDate: new Date(fine.fineDate)
+                }));
+                setFines(fines);
             } catch (err) {
+                console.error(err);
                 setError("Failed to fetch fines");
             } finally {
                 setLoading(false);
